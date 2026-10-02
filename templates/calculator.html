@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>📊 Günlük Karbon Ayak İzi Hesaplayıcı</h2>
+<p>Günlük alışkanlıklarınızı girerek tahmini CO2 emisyonunuzu kg cinsinden hesaplayın.</p>
+
+<form method="POST">
+    <label>Bugün özel araçla kaç km yol yaptınız?</label>
+    <input type="number" step="0.1" name="km" placeholder="Örn: 15" required>
+
+    <label>Tahmini günlük elektrik tüketiminiz (kWh):</label>
+    <input type="number" step="0.1" name="kwh" placeholder="Örn: 5" required>
+
+    <label>Bugün kaç porsiyon kırmızı etli yemek yediniz?</label>
+    <input type="number" step="1" name="meat" placeholder="Örn: 1" required>
+
+    <button type="submit" class="btn">Hesapla</button>
+</form>
+
+{% if carbon_result is not none %}
+    <div style="margin-top: 25px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+        <h3>Tahmini Günlük Emisyonunuz: {{ carbon_result }} kg CO2</h3>
+        {% if carbon_result < 5 %}
+            <p style="color: green;">🌱 Harika! Karbon ayak iziniz ortalamanın oldukça altında.</p>
+        {% else %}
+            <p style="color: #d32f2f;">⚠️ Karbon ayak iziniz yüksek. Toplu taşıma kullanarak emisyonu düşürebilirsiniz.</p>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

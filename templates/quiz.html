@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>❓ İklim Değişikliği Quizi</h2>
+
+{% if submitted %}
+    <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <h3>Sonuç: {{ score }} / {{ total }} Doğru!</h3>
+    </div>
+    {% for r in results %}
+        <div class="card {% if r.is_correct %}correct{% else %}wrong{% endif %}">
+            <h4>{{ r.question }}</h4>
+            <p><b>Senin Yanıtın:</b> {{ r.selected or 'Boş bırakıldı' }}</p>
+            <p><b>Doğru Cevap:</b> {{ r.correct_answer }}</p>
+            <p><i>{{ r.explanation }}</i></p>
+        </div>
+    {% endfor %}
+    <a href="{{ url_for('quiz') }}"><button class="btn">Tekrar Çöz</button></a>
+{% else %}
+    <form method="POST">
+        {% for q in questions %}
+            <div class="card">
+                <h4>{{ loop.index }}. {{ q.question }}</h4>
+                {% for opt in q.options %}
+                    <label style="display:block; margin: 6px 0;">
+                        <input type="radio" name="q_{{ q.id }}" value="{{ opt }}" required> {{ opt }}
+                    </label>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn">Yanıtları Gönder</button>
+    </form>
+{% endif %}
+{% endblock %}

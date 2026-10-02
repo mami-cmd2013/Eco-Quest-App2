@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>İklim Değişikliği ve Farkındalık Portalı</h2>
+<p>Eco-Quest'e hoş geldiniz! Uygulamamız sayesinde iklim değişikliği bilginizi test edebilir ve günlük karbon ayak izinizi hesaplayabilirsiniz.</p>
+<div style="margin-top: 20px;">
+    <a href="{{ url_for('quiz') }}"><button class="btn">Quize Başla</button></a>
+    <a href="{{ url_for('calculator') }}"><button class="btn" style="background:#0288d1;">Karbon Ayak İzi Hesapla</button></a>
+</div>
+{% endblock %}

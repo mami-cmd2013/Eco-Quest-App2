@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title or "Eco-Quest App" }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>🌱 Eco-Quest App</h1>
+        <nav>
+            <a href="{{ url_for('home') }}">Ana Sayfa</a>
+            <a href="{{ url_for('quiz') }}">İklim Quizi</a>
+            <a href="{{ url_for('calculator') }}">Karbon Hesaplayıcı</a>
+        </nav>
+    </header>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
