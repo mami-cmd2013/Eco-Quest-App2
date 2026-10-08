@@ -1,9 +1,360 @@
-{% extends 'base.html' %}
-{% block content %}
-<h2>İklim Değişikliği ve Farkındalık Portalı</h2>
-<p>Eco-Quest'e hoş geldiniz! Uygulamamız sayesinde iklim değişikliği bilginizi test edebilir ve günlük karbon ayak izinizi hesaplayabilirsiniz.</p>
-<div style="margin-top: 20px;">
-    <a href="{{ url_for('quiz') }}"><button class="btn">Quize Başla</button></a>
-    <a href="{{ url_for('calculator') }}"><button class="btn" style="background:#0288d1;">Karbon Ayak İzi Hesapla</button></a>
-</div>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoTrack - Doğa Dostu Yaşam</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🌿 EcoTrack</h1>
+            <button type="button" class="btn" style="background:#0d232a; border:1px solid #2ecc71; color:#38ef7d; cursor:default;">
+                🔊 Yağmur Sesi ⏸️
+            </button>
+            <div class="badges">
+                <div class="badge badge-coins">🪙 {{ eco_coins }} Eko-Para</div>
+                <div class="badge badge-streak">🔥 {{ streak }} Gün Seri!</div>
+            </div>
+        </header>
+
+        <!-- Haberler -->
+        <div class="card news-card">
+            <h2>🌐 DÜNYADAN İKLİM HABERLERİ</h2>
+            {% for news in world_news %}
+                <p><strong>{{ news.baslik }}:</strong> {{ news.ozet }}</p>
+            {% endfor %}
+        </div>
+
+        <!-- 👣 KARBON AYAK İZİ HESAPLAMA -->
+        <div class="card carbon-card">
+            <h2>👣 KARBON AYAK İZİ HESAPLAYICI</h2>
+            <p style="font-size:13px; color:#bdc3c7; margin-bottom:12px;">Günlük yaşam alışkanlıklarını seç, yıllık CO₂ salınımını öğren ve <strong>+50 Eko-Para</strong> kazan!</p>
+            
+            <form action="{{ url_for('calculate_carbon') }}" method="POST" style="display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label style="font-size:13px;">🚗 Ulaşım Tercihi:</label>
+                    <select name="transport" style="background:#1a2a32; color:#fff; border:1px solid #2ecc71; padding:5px; border-radius:5px;">
+                        <option value="0.5">Yürüyüş / Bisiklet / Toplu Taşıma</option>
+                        <option value="1.8">Aralıklı Özel Araç Kullanımı</option>
+                        <option value="3.5">Her gün Özel Araç / Uçak Seyahatleri</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label style="font-size:13px;">🥩 Beslenme Alışkanlığı:</label>
+                    <select name="diet" style="background:#1a2a32; color:#fff; border:1px solid #2ecc71; padding:5px; border-radius:5px;">
+                        <option value="0.8">Vejetaryen / Vegan</option>
+                        <option value="1.6">Dengeli Et & Sebze</option>
+                        <option value="2.8">Ağırlıklı Kırmızı Et Tüketimi</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label style="font-size:13px;">💡 Ev Enerji Tüketimi:</label>
+                    <select name="energy" style="background:#1a2a32; color:#fff; border:1px solid #2ecc71; padding:5px; border-radius:5px;">
+                        <option value="0.6">Yenilenebilir Enerji / Tasarruflu</option>
+                        <option value="1.2">Ortalama Standart Kullanım</option>
+                        <option value="2.2">Yüksek Elektrik & Isınma Kullanımı</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn" style="background:#2ecc71; color:#000; font-weight:bold; margin-top:5px;">
+                    📊 Karbon Ayak İzimi Hesapla
+                </button>
+            </form>
+
+            {% if carbon_footprint %}
+                <div style="margin-top:12px; padding:10px; background:#0d232a; border-radius:6px; border:1px solid #3498db; text-align:center;">
+                    <p style="color:#3498db; font-weight:bold; font-size:15px;">
+                        🌎 Yıllık Karbon Ayak İziniz: {{ carbon_footprint }} Ton CO₂/Yıl
+                    </p>
+                    <small style="color:#2ecc71;">
+                        {% if carbon_footprint < 3.0 %}
+                            🌱 Mükemmel! Dünya ortalamasının altında, harika bir eko-yaşam sürüyorsunuz!
+                        {% elif carbon_footprint < 5.5 %}
+                            ⚠️ Ortalama bir karbon salınımınız var. Ormanınıza daha çok ağaç dikerek bunu telafi edebilirsiniz!
+                        {% else %}
+                            🚨 Karbon ayak iziniz yüksek! Toplu taşıma kullanarak ve ağaç dikerek doğayı koruyabilirsiniz.
+                        {% endif %}
+                    </small>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- AI Kamera Tarama -->
+        <div class="card ai-card">
+            <h2>📸 AI ATIK TANIMA & CANLI KAMERA (TensorFlow.js)</h2>
+            
+            <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                <video id="webcam" autoplay playsinline style="width:100%; max-width:320px; height:240px; background:#000; border-radius:8px; display:none; border:2px solid #3498db;"></video>
+                
+                <div style="display:flex; gap:10px;">
+                    <button type="button" class="btn" id="startCamBtn" onclick="startCamera()">📷 Kamerayı Aç & AI Yükle</button>
+                    <button type="button" class="btn" id="scanBtn" onclick="analyzeFrameWithAI()" style="display:none; background:#2ecc71;">🔍 Atığı Gerçek Zamanlı Tara</button>
+                </div>
+                <p id="camStatus" style="font-size:12px; color:#bdc3c7;">AI Modeli ve Kamerayı başlatmak için ikona bas.</p>
+            </div>
+
+            <form id="wasteForm" action="{{ url_for('scan_waste') }}" method="POST" style="display:none;">
+                <input type="hidden" name="waste_type" id="detectedWaste">
+            </form>
+
+            {% if scan_result %}
+                <div style="margin-top:10px; padding:10px; background:#0d232a; border-radius:6px; border:1px solid #2ecc71;">
+                    <p style="color:#2ecc71; font-weight:bold;">
+                        ✅ Yapay Zeka Taraması Başarılı!<br>
+                        Tespit Edilen Nesne: {{ scan_result.waste_type }}<br>
+                        Atılacak Yer: {{ scan_result.bin }}<br>
+                        Kazanç: +{{ scan_result.earned }} 🪙
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sanal Orman -->
+        <div class="card forest-card">
+            <h2>🌲 SANAL ORMAN & ÇİFTLİK MAĞAZASI</h2>
+            <div class="o2-box">
+                <h3>💨 Toplam Oksijen Üretimi: {{ total_o2 }} m³/gün</h3>
+                <small>
+                    Ağaçlar: {{ total_tree_count }} Adet | 
+                    Gübre Katkısı: +{{ fertilizer_count * 2.0 }} m³
+                </small>
+            </div>
+
+            <!-- Ağaç Mağazası -->
+            <p style="margin-top:10px; font-weight:bold;">🌳 Fidan Dik & Ormanını Genişlet:</p>
+            <div class="market-items" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px;">
+                {% for key, data in tree_types.items() %}
+                    <a href="{{ url_for('buy_item', item_type='tree', item_id=key) }}" class="item-btn" style="background:#1a3c2f;">
+                        {{ data.name }}<br>(+{{ data.o2 }} m³ O₂) - {{ data.cost }} 🪙<br>
+                        <small>Sahip Olunan: {{ trees.get(key, 0) }}</small>
+                    </a>
+                {% endfor %}
+            </div>
+
+            {% if unlocked_customizations %}
+                <p style="margin-top:15px; font-weight:bold; color:#f39c12;">✨ Açılan Özel Bahçe Dekorasyonları:</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
+                    {% for item_key in unlocked_customizations %}
+                        <div style="background:#2c3e50; border:1px solid #f1c40f; padding:6px 12px; border-radius:15px; font-size:12px; color:#f1c40f;">
+                            <strong>{{ garden_customizations[item_key]['name'] }}</strong>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Ekipmanlar -->
+            <p style="margin-top:15px; font-weight:bold;">🛡️ Orman Ekipmanları:</p>
+            <div class="market-items" style="display:flex; gap:10px;">
+                <a href="{{ url_for('buy_item', item_type='upgrade', item_id='gardener') }}" class="item-btn" style="flex:1;">
+                    👨‍🌾 Eko-Bahçıvan (+2.0 m³ O₂) - 100 🪙
+                    {% if has_gardener %}<br><strong>(Alındı ✓)</strong>{% endif %}
+                </a>
+                <a href="{{ url_for('buy_item', item_type='upgrade', item_id='fence') }}" class="item-btn" style="background:#3d220f; border-color:#e67e22; flex:1;">
+                    🛡️ Ahşap Çit (+1.5 m³ O₂) - 80 🪙
+                    {% if has_fence %}<br><strong>(Alındı ✓)</strong>{% endif %}
+                </a>
+            </div>
+        </div>
+
+        <!-- 🚜 EKO-TARIM ARAZİSİ & PAZAR YERİ -->
+        <div class="card farm-card">
+            <h2>🚜 EKO-TARIM ARAZİSİ & ORGANİK PAZAR</h2>
+            
+            {% if not has_farm %}
+                <div style="text-align:center; padding:15px;">
+                    <p style="margin-bottom:10px;">Kendi sebzelerini yetiştirip pazarda satarak Eko-Para kazanmak ister misin?</p>
+                    <a href="{{ url_for('buy_item', item_type='upgrade', item_id='farm') }}" class="btn" style="background:#27ae60;">
+                        🚜 Eko-Tarım Arazisi Aç - 120 🪙
+                    </a>
+                </div>
+            {% else %}
+                <p style="font-size:13px; color:#2ecc71; margin-bottom:10px;">
+                    ⚡ <strong>Oksijen Pazar Bonusu:</strong> Ormanın ürettiği O2 sayesinde ürünlerin tanesine <strong>+{{ o2_bonus }} 🪙</strong> fazla ödeniyor!
+                </p>
+
+                <!-- Tohum Ekme Alanı -->
+                <p style="font-weight:bold;">🌱 1. Tohum Ek (Tarla):</p>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:5px;">
+                    {% for key, data in crop_types.items() %}
+                        <a href="{{ url_for('plant_crop', crop_id=key) }}" class="item-btn" style="background:#2e4053; text-align:center;">
+                            {{ data.name }} Ekiş<br>
+                            <small>Tohum: {{ data.seed_cost }} 🪙</small><br>
+                            <strong>Toprakta: {{ farm_crops.get(key, 0) }}</strong>
+                        </a>
+                    {% endfor %}
+                </div>
+
+                <!-- Hasat Etme -->
+                <p style="font-weight:bold; margin-top:15px;">🧺 2. Ürünleri Hasat Et:</p>
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    {% for key, data in crop_types.items() %}
+                        {% if farm_crops.get(key, 0) > 0 %}
+                            <a href="{{ url_for('harvest_crop', crop_id=key) }}" class="btn" style="background:#e67e22; flex:1; font-size:12px;">
+                                ✂️ {{ data.name }} Hasat Et ({{ farm_crops[key] }})
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Organik Pazar Tezgahi -->
+                <p style="font-weight:bold; margin-top:15px;">🛒 3. Organik Pazar Tezgahı (Satış):</p>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:5px;">
+                    {% for key, data in crop_types.items() %}
+                        <div style="background:#1b382b; border:1px solid #2ecc71; padding:8px; border-radius:6px; text-align:center;">
+                            <span>{{ data.name }}</span><br>
+                            <small style="color:#2ecc71; font-weight:bold;">Fiyat: {{ data.sell_price }} 🪙</small><br>
+                            <small>Sepette: {{ harvested_crops.get(key, 0) }} Adet</small><br>
+                            {% if harvested_crops.get(key, 0) > 0 %}
+                                <a href="{{ url_for('sell_crop', crop_id=key) }}" class="btn" style="background:#2ecc71; color:#000; font-size:11px; padding:4px 8px; margin-top:5px; display:inline-block;">
+                                    💰 Pazarda Sat
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 10 Soruluk Quiz Kartı -->
+        <div class="card quiz-card">
+            <h2>🧠 GÜNÜN İKLİM QUİZİ (Soru {{ quiz_index + 1 }} / {{ total_questions }})</h2>
+            
+            {% if current_question %}
+                <p style="font-size:15px; font-weight:bold; margin-top:5px;">{{ current_question.question }}</p>
+                
+                <form action="{{ url_for('answer_quiz') }}" method="POST" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+                    {% for key, text in current_question.options.items() %}
+                        <button type="submit" name="option" value="{{ key }}" class="btn" style="background:#203a43; text-align:left; padding:10px;">
+                            <strong>{{ key }})</strong> {{ text }}
+                        </button>
+                    {% endfor %}
+                </form>
+            {% else %}
+                <p style="color:#2ecc71; margin-top:10px; font-weight:bold; font-size:16px;">
+                    🎉 Tebrikler! Tüm 10 iklim sorusunu başarıyla tamamladınız!
+                </p>
+            {% endif %}
+
+            {% if quiz_msg %}
+                <p style="margin-top:10px; font-size:13px; font-weight:bold; color:#f39c12;">{{ quiz_msg }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Günlük Seri -->
+        <div class="card streak-card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h2>🔥 GÜNLÜK YEŞİL SERİ (ECO STREAK)</h2>
+                <p>Bugünün Görevi: {{ daily_task }}</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+                {% if not task_completed %}
+                    <form action="{{ url_for('complete_task') }}" method="POST">
+                        <button type="submit" class="btn" style="background:#e67e22;">✓ Görevi Tamamla (+30 🪙)</button>
+                    </form>
+                {% else %}
+                    <button class="btn" style="background:#7f8c8d; cursor:not-allowed;" disabled>✅ Bugünkü Görev Yapıldı</button>
+                {% endif %}
+                <button class="btn btn-cert" onclick="alert('Sertifikanız PDF olarak hazırlanıyor...')">📜 Sertifikamı İndir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👨‍🌾 RASTGELE EKRANIN YANINDA ÇIKAN ÇİFTÇİ GÖREV KARTI -->
+    {% if farmer_quest %}
+        <div style="position:fixed; bottom:20px; right:20px; width:280px; background:#112211; border:2px solid #f39c12; border-radius:12px; padding:15px; box-shadow:0 8px 24px rgba(0,0,0,0.6); z-index:9999; animation: slideIn 0.5s ease-out;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <strong style="color:#f39c12; font-size:14px;">👨‍🌾 Komşu Çiftçi Ziyaretçi</strong>
+                <a href="{{ url_for('dismiss_farmer_quest') }}" style="color:#bdc3c7; text-decoration:none; font-weight:bold;">✕</a>
+            </div>
+            <p style="font-size:12px; color:#ecf0f1; margin-bottom:10px;">
+                "Selam dostum! Banliyö pazarı için acil <strong>{{ farmer_quest.amount }} adet {{ farmer_quest.crop_name }}</strong> lazım. Bana yardımcı olabilir misin?"
+            </p>
+            
+            <p style="font-size:11px; color:#2ecc71; font-weight:bold; margin-bottom:10px;">
+                🎁 Ödül: +{{ farmer_quest.reward_coins }} 🪙 
+                {% if farmer_quest.reward_id %}
+                    + {{ garden_customizations[farmer_quest.reward_id]['name'] }}
+                {% endif %}
+            </p>
+
+            {% if harvested_crops.get(farmer_quest.crop_key, 0) >= farmer_quest.amount %}
+                <a href="{{ url_for('complete_farmer_quest') }}" class="btn" style="background:#2ecc71; color:#000; width:100%; text-align:center; font-size:12px; padding:6px 0;">
+                    ✅ Görevi Ver (Sepette Var!)
+                </a>
+            {% else %}
+                <div style="background:#34495e; color:#bdc3c7; padding:6px; border-radius:4px; font-size:11px; text-align:center;">
+                    🧺 Sepette Yetersiz ({{ harvested_crops.get(farmer_quest.crop_key, 0) }}/{{ farmer_quest.amount }})
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <!-- Toast Notu -->
+    <div class="toast">
+        <strong style="color:#38ef7d;">📢 GÜNÜN ÇEVRE NOTU</strong>
+        <p style="margin-top:5px;">{{ daily_fact }}</p>
+    </div>
+
+    <!-- JAVASCRIPT KODLARI -->
+    <script>
+        let video = document.getElementById('webcam');
+        let camStatus = document.getElementById('camStatus');
+        let aiModel = null;
+
+        async function startCamera() {
+            camStatus.innerText = "⏳ Kamera açılıyor & Yapay Zeka modeli yükleniyor...";
+            try {
+                let stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                video.style.display = 'block';
+                
+                aiModel = await cocoSsd.load();
+
+                document.getElementById('startCamBtn').style.display = 'none';
+                document.getElementById('scanBtn').style.display = 'inline-block';
+                camStatus.innerText = "🟢 AI Aktif! Şişe, Telefon, Kitap vb. nesneyi kameraya gösterip 'Atığı Tara'ya bas.";
+            } catch (err) {
+                alert("Kamera izni verilmeli veya internet bağlantısı kontrol edilmeli!");
+                camStatus.innerText = "❌ AI Modeli veya Kamera yüklenirken hata oluştu!";
+            }
+        }
+
+        async function analyzeFrameWithAI() {
+            if (!aiModel) return;
+
+            camStatus.innerText = "🤖 AI Görsel Taraması Yapıyor...";
+            const predictions = await aiModel.detect(video);
+            let detectedWaste = "Plastik Şişe / Kap";
+
+            if (predictions.length > 0) {
+                let topClass = predictions[0].class.toLowerCase();
+
+                if (topClass.includes('bottle') || topClass.includes('cup') || topClass.includes('bowl')) {
+                    detectedWaste = 'Plastik Şişe / Kap';
+                } else if (topClass.includes('can') || topClass.includes('cell phone') || topClass.includes('laptop') || topClass.includes('remote') || topClass.includes('keyboard')) {
+                    detectedWaste = 'Elektronik Atık / Pil';
+                } else if (topClass.includes('book') || topClass.includes('paper') || topClass.includes('box')) {
+                    detectedWaste = 'Karton / Kağıt';
+                } else {
+                    detectedWaste = 'Plastik Şişe / Kap';
+                }
+            } else {
+                camStatus.innerText = "⚠️ Nesne net algılanamadı, varsayılan atık taranıyor...";
+            }
+
+            setTimeout(() => {
+                document.getElementById('detectedWaste').value = detectedWaste;
+                document.getElementById('wasteForm').submit();
+            }, 800);
+        }
+    </script>
+</body>
+</html>

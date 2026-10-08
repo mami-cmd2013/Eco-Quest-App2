@@ -1,0 +1,154 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 900px;
+    background: rgba(32, 58, 67, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #142830;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+header h1 {
+    color: #38ef7d;
+    font-size: 20px;
+}
+
+.badges {
+    display: flex;
+    gap: 10px;
+}
+
+.badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.badge-coins {
+    border: 1px solid #f1c40f;
+    background: #2c2205;
+    color: #f1c40f;
+}
+
+.badge-streak {
+    border: 1px solid #ff9f43;
+    background: #2b1a09;
+    color: #ff9f43;
+}
+
+.card {
+    background: rgba(14, 32, 48, 0.8);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card h2 {
+    font-size: 15px;
+    margin-bottom: 10px;
+}
+
+.news-card { border-color: #2ecc71; }
+.news-card h2 { color: #2ecc71; }
+
+.ai-card { border-color: #3498db; }
+.ai-card h2 { color: #3498db; }
+
+.forest-card { border-color: #2ecc71; background: #0a261c; }
+.forest-card h2 { color: #38ef7d; }
+
+.o2-box {
+    background: #051c19;
+    border: 1px solid #00cec9;
+    padding: 10px;
+    border-radius: 8px;
+    color: #00cec9;
+    margin: 10px 0;
+}
+
+.market-items {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.item-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    background: #123d2a;
+    border: 1px solid #2ecc71;
+    color: #ffffff;
+    text-decoration: none;
+    text-align: center;
+    font-size: 12px;
+}
+
+.item-btn:hover {
+    opacity: 0.9;
+}
+
+.quiz-card { border-color: #9b59b6; }
+.quiz-card h2 { color: #9b59b6; }
+
+.streak-card { border-color: #ff9f43; }
+.streak-card h2 { color: #ff9f43; }
+
+.btn {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    background: #3498db;
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-cert {
+    background: #f39c12;
+    color: #000;
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #0b171c;
+    border: 1px solid #38ef7d;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    max-width: 250px;
+}
