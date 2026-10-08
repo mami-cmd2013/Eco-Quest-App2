@@ -22,6 +22,7 @@ EcoTrack, bireylerin çevre bilincini artırmak, atık ayrıştırma alışkanl�
 
 ---
 
+
 ## 💻 Kurulum ve Çalıştırma
 
 1. **Repoyu klonlayın:**
